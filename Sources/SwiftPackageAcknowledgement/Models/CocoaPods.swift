@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import FoundationExtensions
 
 struct CocoaPodsPlist: Codable {
     let preferenceSpecifiers: [Item]
@@ -45,12 +46,12 @@ struct CocoaPodsPlist: Codable {
 }
 
 func saveToPList(
-    fileSave: @escaping FileSave,
-    encoder: @escaping Encoder<CocoaPodsPlist>,
     cocoaPods: CocoaPodsPlist,
     path: String
-) -> Result<Void, GeneratePlistError> {
-    encoder(cocoaPods)
-        .flatMap { fileSave(path, $0) }
-        .mapError(GeneratePlistError.cocoaPodsPListCannotBeEncoded)
+) -> Reader<(FileSave, Encoder<CocoaPodsPlist>), Result<Void, GeneratePlistError>> {
+    Reader { fileSave, encoder in
+        encoder(cocoaPods)
+            .flatMap { fileSave(path, $0) }
+            .mapError(GeneratePlistError.cocoaPodsPListCannotBeEncoded)
+    }
 }

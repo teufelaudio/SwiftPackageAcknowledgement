@@ -22,29 +22,34 @@ struct GeneratePlist: ParsableCommand {
     @Argument(help: "If providing client ID and client secret, the GitHub API call will have extended limits.")
     var gitSecret: String?
 
-    var world: World { .default }
+    private var world: World { .default }
 
     func run() throws {
         var cancellables = Set<AnyCancellable>()
 
-        packageResolvedFile(from: workspacePath, pathExists: world.pathExists)
-            .flatMap(readJson(decoder: world.spmJsonDecoder))
-            .map(extractPackageGitHubRepositories)
-            .promise
-            .flatMap { packageRepositories in
+        packageResolvedFile(from: workspacePath)
+            .contramapEnvironment(\World.pathExists)
+            .flatMapResult { readSwiftPackageResolvedJson(url: $0).contramapEnvironment(\World.spmJsonDecoder) }
+            .mapResult(extractPackageGitHubRepositories)
+            .mapValue(\.promise)
+            .flatMapPublisher { packageRepositories in
                 fetchGithubLicenses(
-                    urlSession: self.world.urlSession,
-                    decoder: self.world.githubJsonDecoder,
                     packageRepositories: packageRepositories,
                     githubClientID: self.gitClientID,
                     githubClientSecret: self.gitSecret
-                )
+                ).contramapEnvironment(\World.urlSession, \World.githubJsonDecoder)
             }
-            .flatMap { (packageLicenses: [PackageLicense]) in
-                cocoaPodsModel(urlSession: self.world.urlSession, packageLicenses: packageLicenses)
-            }.flatMapResult { cocoaPods in
-                saveToPList(fileSave: self.world.fileSave, encoder: self.world.cocoaPodsEncoder, cocoaPods: cocoaPods, path: self.outputFile)
-            }.sinkBlockingAndExit(
+            .flatMapPublisher { (packageLicenses: [PackageLicense]) in
+                cocoaPodsModel(packageLicenses: packageLicenses)
+                    .contramapEnvironment(\World.urlSession)
+            }
+            .flatMapPublisher { cocoaPods in
+                saveToPList(cocoaPods: cocoaPods, path: self.outputFile)
+                    .mapValue(\.promise)
+                    .contramapEnvironment(\World.fileSave, \World.cocoaPodsEncoder)
+            }
+            .inject(world)
+            .sinkBlockingAndExit(
                 receiveCompletion: { completion in
                     switch completion {
                     case let .failure(error): print("An error has occurred: \(error)")

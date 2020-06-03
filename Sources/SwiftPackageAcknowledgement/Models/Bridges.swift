@@ -24,32 +24,37 @@ func extractPackageGitHubRepositories(from spmFile: ResolvedPackageContent) -> [
     }
 }
 
-func fetchGithubLicenses(urlSession: @escaping Request,
-                         decoder: @escaping Decoder<GitHubLicense>,
-                         packageRepositories: [PackageRepository],
-                         githubClientID: String?,
-                         githubClientSecret: String?) -> Publishers.Promise<[PackageLicense], GeneratePlistError> {
-    Publishers.Promise.zip(
-        packageRepositories.map { packageRepository in
-            githubLicensingAPI(
-                urlSession: urlSession,
-                decoder: decoder,
-                repository: packageRepository.repository,
-                githubClientID: githubClientID,
-                githubClientSecret: githubClientSecret
-            ).map { license in PackageLicense(package: packageRepository.package, license: license) }
-            .promise
-        }
-    ).promise
+func fetchGithubLicenses(
+    packageRepositories: [PackageRepository],
+    githubClientID: String?,
+    githubClientSecret: String?
+) -> Reader<(Request, Decoder<GitHubLicense>), Publishers.Promise<[PackageLicense], GeneratePlistError>> {
+    Reader { requester, decoder in
+        Publishers.Promise.zip(
+            packageRepositories.map { packageRepository in
+                githubLicensingAPI(
+                    repository: packageRepository.repository,
+                    githubClientID: githubClientID,
+                    githubClientSecret: githubClientSecret
+                )
+                .inject((requester, decoder))
+                .map { license in PackageLicense(package: packageRepository.package, license: license) }
+                .promise
+            }
+        ).promise
+    }
 }
 
-func cocoaPodsModel(urlSession: @escaping Request, packageLicenses: [PackageLicense]) -> Publishers.Promise<CocoaPodsPlist, GeneratePlistError> {
-    packageLicenses.traverse { packageLicense in
-        downloadGitHubLicenseFile(urlSession: urlSession, url: packageLicense.license.downloadUrl)
-            .map { footerText in
-                CocoaPodsPlist.Item(title: packageLicense.package.package, license: packageLicense.license.licenseName, footerText: footerText)
+func cocoaPodsModel(packageLicenses: [PackageLicense]) -> Reader<Request, Publishers.Promise<CocoaPodsPlist, GeneratePlistError>> {
+    Reader { requester in
+        packageLicenses.traverse { packageLicense in
+            downloadGitHubLicenseFile(url: packageLicense.license.downloadUrl)
+                .inject(requester)
+                .map { footerText in
+                    CocoaPodsPlist.Item(title: packageLicense.package.package, license: packageLicense.license.licenseName, footerText: footerText)
             }
+        }
+        .map(CocoaPodsPlist.init)
+        .promise
     }
-    .map(CocoaPodsPlist.init)
-    .promise
 }

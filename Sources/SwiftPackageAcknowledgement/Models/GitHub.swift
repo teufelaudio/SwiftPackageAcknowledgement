@@ -57,14 +57,12 @@ func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistEr
 }
 
 func githubLicensingAPI(
-    urlSession: @escaping Request,
-    decoder: @escaping Decoder<GitHubLicense>,
     repository: GitHubRepository,
     githubClientID: String?,
     githubClientSecret: String?
-) -> Publishers.Promise<GitHubLicense, GeneratePlistError> {
+) -> Reader<(Request, Decoder<GitHubLicense>), Publishers.Promise<GitHubLicense, GeneratePlistError>> {
     guard let url = URL(string: "https://api.github.com/repos/\(repository.owner)/\(repository.name)/license") else {
-        return .init(error: .invalidLicenseMetadataURL)
+        return Reader { _ in .init(error: .invalidLicenseMetadataURL) }
     }
 
     var request = URLRequest(url: url)
@@ -75,35 +73,39 @@ func githubLicensingAPI(
 
     print("Fetching from \(url)")
 
-    return urlSession(request)
-        .mapError(GeneratePlistError.githubAPIURLError)
-        .flatMapResult { data, response -> Result<Data, GeneratePlistError> in
-            guard let httpResponse = response as? HTTPURLResponse,
-                200..<300 ~= httpResponse.statusCode else {
-                    return .failure(.githubAPIInvalidResponse(response))
+    return Reader { requester, decoder in
+        requester(request)
+            .mapError(GeneratePlistError.githubAPIURLError)
+            .flatMapResult { data, response -> Result<Data, GeneratePlistError> in
+                guard let httpResponse = response as? HTTPURLResponse,
+                    200..<300 ~= httpResponse.statusCode else {
+                        return .failure(.githubAPIInvalidResponse(response))
+                }
+                return .success(data)
             }
-            return .success(data)
-        }
-        .flatMapResult { data in
-            decoder(data).mapError { error in
-                GeneratePlistError.githubLicenseJsonCannotBeDecoded(url: url, json: String(data: data, encoding: .utf8), error: error)
+            .flatMapResult { data in
+                decoder(data).mapError { error in
+                    GeneratePlistError.githubLicenseJsonCannotBeDecoded(url: url, json: String(data: data, encoding: .utf8), error: error)
+                }
             }
-        }
-        .promise
+            .promise
+    }
 }
 
-func downloadGitHubLicenseFile(urlSession: @escaping Request, url: URL) -> Publishers.Promise<String, GeneratePlistError> {
-    urlSession(URLRequest(url: url))
-        .mapError(GeneratePlistError.githubAPIURLError)
-        .flatMapResult { data, response -> Result<Data, GeneratePlistError> in
-            guard let httpResponse = response as? HTTPURLResponse,
-                200..<300 ~= httpResponse.statusCode else {
-                    return .failure(.githubAPIInvalidResponse(response))
-            }
-            return .success(data)
+func downloadGitHubLicenseFile(url: URL) -> Reader<Request, Publishers.Promise<String, GeneratePlistError>> {
+    Reader { requester in
+        requester(URLRequest(url: url))
+            .mapError(GeneratePlistError.githubAPIURLError)
+            .flatMapResult { data, response -> Result<Data, GeneratePlistError> in
+                guard let httpResponse = response as? HTTPURLResponse,
+                    200..<300 ~= httpResponse.statusCode else {
+                        return .failure(.githubAPIInvalidResponse(response))
+                }
+                return .success(data)
         }
         .flatMapResult { data in
             String(data: data, encoding: .utf8).map(Result.success) ?? .failure(GeneratePlistError.githubLicenseCannotBeDownloaded(url))
         }
         .promise
+    }
 }

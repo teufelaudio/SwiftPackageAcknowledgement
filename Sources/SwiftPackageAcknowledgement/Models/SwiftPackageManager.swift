@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import FoundationExtensions
 
 struct ResolvedPackageContent: Decodable {
     let object: ResolvedPackageObject
@@ -29,25 +30,28 @@ struct ResolvedPackageState: Decodable {
     let version: String?
 }
 
-func packageResolvedFile(from workspacePath: String, pathExists: PathExists) -> Result<URL, GeneratePlistError> {
-    let (exists, isDirectory) = pathExists(workspacePath)
-    guard exists else { return .failure(.workspacePathDoesNotExist) }
-    guard isDirectory else { return .failure(.workspacePathIsNotAFolder) }
+func packageResolvedFile(from workspacePath: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {
+    Reader { pathExists in
+        let (exists, isDirectory) = pathExists(workspacePath)
+        guard exists else { return .failure(.workspacePathDoesNotExist) }
+        guard isDirectory else { return .failure(.workspacePathIsNotAFolder) }
 
-    let workspaceURL = URL(fileURLWithPath: workspacePath, isDirectory: true)
-    let packageResolved = workspaceURL
-        .appendingPathComponent("xcshareddata", isDirectory: true)
-        .appendingPathComponent("swiftpm", isDirectory: true)
-        .appendingPathComponent("Package.resolved", isDirectory: false)
+        let workspaceURL = URL(fileURLWithPath: workspacePath, isDirectory: true)
+        let packageResolved = workspaceURL
+            .appendingPathComponent("xcshareddata", isDirectory: true)
+            .appendingPathComponent("swiftpm", isDirectory: true)
+            .appendingPathComponent("Package.resolved", isDirectory: false)
 
-    guard pathExists(packageResolved.path) == (exists: true, isDirectory: false) else {
-        return .failure(.swiftPackageNotPresent)
+        guard pathExists(packageResolved.path) == (exists: true, isDirectory: false) else {
+            return .failure(.swiftPackageNotPresent)
+        }
+
+        return .success(packageResolved)
     }
-
-    return .success(packageResolved)
 }
 
-func readJson(decoder: @escaping Decoder<ResolvedPackageContent>) -> (URL) -> Result<ResolvedPackageContent, GeneratePlistError> { { url in
+func readSwiftPackageResolvedJson(url: URL) -> Reader<Decoder<ResolvedPackageContent>, Result<ResolvedPackageContent, GeneratePlistError>> {
+    Reader { decoder in
         Result { try Data(contentsOf: url) }
             .mapError(GeneratePlistError.swiftPackageCannotBeOpen)
             .flatMap { decoder($0).mapError(GeneratePlistError.swiftPackageJsonCannotBeDecoded) }
