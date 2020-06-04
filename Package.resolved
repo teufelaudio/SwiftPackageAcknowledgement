@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "FoundationExtensions",
+        "repositoryURL": "https://github.com/teufelaudio/FoundationExtensions",
+        "state": {
+          "branch": null,
+          "revision": "58347b6e8ad3fc5ef0d51dd0c4f0433f9c4f3cc5",
+          "version": "0.1.0"
+        }
+      },
+      {
+        "package": "swift-argument-parser",
+        "repositoryURL": "https://github.com/apple/swift-argument-parser",
+        "state": {
+          "branch": null,
+          "revision": "3d79b2b5a2e5af52c14e462044702ea7728f5770",
+          "version": "0.1.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

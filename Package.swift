@@ -8,8 +8,8 @@ let package = Package(
         .executable(name: "spm-ack", targets: ["SwiftPackageAcknowledgement"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "0.0.6"),
-        .package(url: "https://github.com/teufelaudio/FoundationExtensions", .branch("Promise"))
+        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "0.0.6")),
+        .package(url: "https://github.com/teufelaudio/FoundationExtensions", .upToNextMajor(from: "0.1.0"))
     ],
     targets: [
         .target(
