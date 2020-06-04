@@ -9,12 +9,15 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "0.0.6")),
-        .package(url: "https://github.com/teufelaudio/FoundationExtensions", .upToNextMajor(from: "0.1.0"))
+        .package(url: "https://github.com/teufelaudio/FoundationExtensions", .upToNextMajor(from: "0.1.1"))
     ],
     targets: [
         .target(
             name: "SwiftPackageAcknowledgement",
-            dependencies: [.product(name: "ArgumentParser", package: "swift-argument-parser"), "FoundationExtensions"]
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "FoundationExtensionsStatic", package: "FoundationExtensions")
+            ]
         )
     ]
 )
