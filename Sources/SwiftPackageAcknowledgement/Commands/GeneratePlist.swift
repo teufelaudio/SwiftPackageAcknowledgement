@@ -1,10 +1,4 @@
-//
-//  GeneratePlist.swift
-//  SwiftPackageAcknowledgement
-//
-//  Created by Luiz Barbosa on 03.06.20.
-//  Copyright © 2020 Lautsprecher Teufel GmbH. All rights reserved.
-//
+// Copyright © 2021 Lautsprecher Teufel GmbH. All rights reserved.
 
 import ArgumentParser
 import Combine
@@ -21,6 +15,8 @@ struct GeneratePlist: ParsableCommand {
     var gitClientID: String?
     @Argument(help: "If providing client ID and client secret, the GitHub API call will have extended limits.")
     var gitSecret: String?
+    @Option(wrappedValue: [""])
+    var ignore: [String]
 
     private var world: World { .default }
 
@@ -30,6 +26,7 @@ struct GeneratePlist: ParsableCommand {
         packageResolvedFile(from: workspacePath)
             .contramapEnvironment(\World.pathExists)
             .flatMapResult { readSwiftPackageResolvedJson(url: $0).contramapEnvironment(\World.spmJsonDecoder) }
+            .mapResult { $0.ignoring(packages: ignore) }
             .mapResult(extractPackageGitHubRepositories)
             .mapValue(\.promise)
             .flatMapPublisher { packageRepositories in

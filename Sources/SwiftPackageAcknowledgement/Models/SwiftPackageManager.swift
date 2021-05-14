@@ -1,10 +1,4 @@
-//
-//  SwiftPackageManager.swift
-//  SwiftPackageAcknowledgement
-//
-//  Created by Luiz Barbosa on 03.06.20.
-//  Copyright © 2020 Lautsprecher Teufel GmbH. All rights reserved.
-//
+// Copyright © 2021 Lautsprecher Teufel GmbH. All rights reserved.
 
 import Foundation
 import FoundationExtensions
@@ -12,6 +6,20 @@ import FoundationExtensions
 struct ResolvedPackageContent: Decodable {
     let object: ResolvedPackageObject
     let version: Int
+}
+
+extension ResolvedPackageContent {
+    func ignoring(packages ignore: [String]) -> ResolvedPackageContent {
+        if ignore.count == 0 { return self }
+        return ResolvedPackageContent(
+            object: ResolvedPackageObject(
+                pins: object.pins.filter { pin in
+                    !ignore.contains(pin.package)
+                }
+            ),
+            version: version
+        )
+    }
 }
 
 struct ResolvedPackageObject: Decodable {

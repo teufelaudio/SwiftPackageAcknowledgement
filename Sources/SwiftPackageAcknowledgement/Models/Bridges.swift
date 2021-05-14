@@ -1,10 +1,4 @@
-//
-//  Bridges.swift
-//  SwiftPackageAcknowledgement
-//
-//  Created by Luiz Barbosa on 03.06.20.
-//  Copyright © 2020 Lautsprecher Teufel GmbH. All rights reserved.
-//
+// Copyright © 2021 Lautsprecher Teufel GmbH. All rights reserved.
 
 import Combine
 import Foundation
@@ -39,22 +33,22 @@ func fetchGithubLicenses(
                 )
                 .inject((requester, decoder))
                 .map { license in PackageLicense(package: packageRepository.package, license: license) }
-                .promise
             }
-        ).promise
+        )
     }
 }
 
 func cocoaPodsModel(packageLicenses: [PackageLicense]) -> Reader<Request, Publishers.Promise<CocoaPodsPlist, GeneratePlistError>> {
     Reader { requester in
-        packageLicenses.traverse { packageLicense in
-            downloadGitHubLicenseFile(url: packageLicense.license.downloadUrl)
-                .inject(requester)
-                .map { footerText in
-                    CocoaPodsPlist.Item(title: packageLicense.package.package, license: packageLicense.license.licenseName, footerText: footerText)
+        Publishers.Promise.zip(
+            packageLicenses.map { packageLicense in
+                downloadGitHubLicenseFile(url: packageLicense.license.downloadUrl)
+                    .inject(requester)
+                    .map { footerText in
+                        CocoaPodsPlist.Item(title: packageLicense.package.package, license: packageLicense.license.licenseName, footerText: footerText)
+                    }
             }
-        }
+        )
         .map(CocoaPodsPlist.init)
-        .promise
     }
 }
