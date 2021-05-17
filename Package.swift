@@ -9,7 +9,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "0.0.6")),
-        .package(url: "https://github.com/teufelaudio/FoundationExtensions", .branch("NewPromise"))
+        .package(url: "https://github.com/teufelaudio/FoundationExtensions", .upToNextMajor(from: "0.1.6"))
     ],
     targets: [
         .target(

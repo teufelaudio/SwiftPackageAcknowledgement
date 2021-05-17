@@ -5,9 +5,9 @@
         "package": "FoundationExtensions",
         "repositoryURL": "https://github.com/teufelaudio/FoundationExtensions",
         "state": {
-          "branch": "NewPromise",
-          "revision": "580710be8e113fbb398a5ec95ee242c7af4a4415",
-          "version": null
+          "branch": null,
+          "revision": "f6edccfb2dd08b74aa5e6b0bcb2da6b46430ac33",
+          "version": "0.1.6"
         }
       },
       {
