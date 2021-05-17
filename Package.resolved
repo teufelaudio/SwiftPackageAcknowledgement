@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/teufelaudio/FoundationExtensions",
         "state": {
           "branch": null,
-          "revision": "c33815c48b003626e8b3e0955e15b0c6594f2573",
-          "version": "0.1.1"
+          "revision": "f6edccfb2dd08b74aa5e6b0bcb2da6b46430ac33",
+          "version": "0.1.6"
         }
       },
       {
@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/apple/swift-argument-parser",
         "state": {
           "branch": null,
-          "revision": "3d79b2b5a2e5af52c14e462044702ea7728f5770",
-          "version": "0.1.0"
+          "revision": "986d191f94cec88f6350056da59c2e59e83d1229",
+          "version": "0.4.3"
         }
       }
     ]
