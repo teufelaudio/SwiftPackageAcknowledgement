@@ -15,8 +15,8 @@ struct GeneratePlist: ParsableCommand {
     var gitClientID: String?
     @Argument(help: "If providing client ID and client secret, the GitHub API call will have extended limits.")
     var gitSecret: String?
-    @Option(wrappedValue: [""])
-    var ignore: [String]
+    @Option(help: "Comma-separated list of libraries to ignore and not present on the generated plist file.")
+    var ignore: String?
 
     private var world: World { .default }
 
@@ -26,7 +26,7 @@ struct GeneratePlist: ParsableCommand {
         packageResolvedFile(from: workspacePath)
             .contramapEnvironment(\World.pathExists)
             .flatMapResult { readSwiftPackageResolvedJson(url: $0).contramapEnvironment(\World.spmJsonDecoder) }
-            .mapResult { $0.ignoring(packages: ignore) }
+            .mapResult { $0.ignoring(packages: (ignore ?? "").components(separatedBy: ",")) }
             .mapResult(extractPackageGitHubRepositories)
             .mapValue(\.promise)
             .flatMapPublisher { packageRepositories in
