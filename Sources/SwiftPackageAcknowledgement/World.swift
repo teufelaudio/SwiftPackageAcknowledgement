@@ -39,6 +39,7 @@ extension World {
         cocoaPodsEncoder: { cocoaPods in
             Result {
                 let encoder = PropertyListEncoder()
+                encoder.outputFormat = .xml
                 return try encoder.encode(cocoaPods)
             }
         },
