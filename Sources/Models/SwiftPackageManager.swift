@@ -7,6 +7,11 @@ import Helper
 public struct ResolvedPackageContent: Decodable {
     let object: ResolvedPackageObject
     let version: Int
+    
+    public init(object: ResolvedPackageObject, version: Int) {
+        self.object = object
+        self.version = version
+    }
 }
 
 public extension ResolvedPackageContent {
@@ -25,18 +30,38 @@ public extension ResolvedPackageContent {
 
 public struct ResolvedPackageObject: Decodable {
     let pins: [ResolvedPackage]
+
+    public init(pins: [ResolvedPackage]) {
+        self.pins = pins
+    }
 }
 
 public struct ResolvedPackage: Decodable {
     let package: String
     let repositoryURL: URL
     let state: ResolvedPackageState
+    
+    public init(package: String, repositoryURL: URL, state: ResolvedPackageState) {
+        self.package = package
+        self.repositoryURL = repositoryURL
+        self.state = state
+    }
 }
 
 public struct ResolvedPackageState: Decodable {
     let branch: String?
     let revision: String?
     let version: String?
+
+    public init(
+        branch: String? = nil,
+        revision: String? = nil,
+        version: String? = nil
+    ) {
+        self.branch = branch
+        self.revision = revision
+        self.version = version
+    }
 }
 
 public func packageResolvedFile(from workspacePath: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {

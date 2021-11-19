@@ -34,19 +34,22 @@ public struct GitHubLicense: Decodable {
     }
 }
 
-public func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistError> {
+func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistError> {
     let gitDomain = "github.com"
     let gitSuffix = ".git"
 
     guard let host = url.host,
         host.contains(gitDomain),
-        url.pathComponents.count >= 2,
-        url.pathComponents[url.pathComponents.count - 1].hasSuffix(gitSuffix) else { return .failure(.unknownRepository) }
+        url.pathComponents.count >= 2
+    else { return .failure(.unknownRepository) }
 
+    let name = url.pathComponents.last!.contains(gitSuffix)
+        ? String(url.pathComponents[url.pathComponents.count - 1].dropLast(gitSuffix.count))
+        : String(url.pathComponents[url.pathComponents.count - 1].replacingOccurrences(of: gitSuffix, with: ""))
     return .success(
         GitHubRepository(
-            owner: url.pathComponents[url.pathComponents.count - 2],
-            name: String(url.pathComponents[url.pathComponents.count - 1].dropLast(gitSuffix.count))
+            owner: url.pathComponents[1],
+            name: name
         )
     )
 }
