@@ -3,10 +3,11 @@
 import Combine
 import Foundation
 import FoundationExtensions
+import Helper
 
-typealias GitHubRepository = (owner: String, name: String)
+public typealias GitHubRepository = (owner: String, name: String)
 
-struct GitHubLicense: Decodable {
+public struct GitHubLicense: Decodable {
     let name: String
     let path: String
     let sha: String
@@ -33,7 +34,7 @@ struct GitHubLicense: Decodable {
     }
 }
 
-func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistError> {
+public func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistError> {
     let gitDomain = "github.com"
     let gitSuffix = ".git"
 
@@ -50,7 +51,7 @@ func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistEr
     )
 }
 
-func githubLicensingAPI(
+public func githubLicensingAPI(
     repository: GitHubRepository,
     githubClientID: String?,
     githubClientSecret: String?
@@ -86,7 +87,7 @@ func githubLicensingAPI(
     }
 }
 
-func downloadGitHubLicenseFile(url: URL) -> Reader<Request, Publishers.Promise<String, GeneratePlistError>> {
+public func downloadGitHubLicenseFile(url: URL) -> Reader<Request, Publishers.Promise<String, GeneratePlistError>> {
     Reader { requester in
         requester(URLRequest(url: url))
             .mapError(GeneratePlistError.githubAPIURLError)

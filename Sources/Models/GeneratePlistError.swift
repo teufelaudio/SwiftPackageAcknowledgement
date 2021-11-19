@@ -2,7 +2,7 @@
 
 import Foundation
 
-enum GeneratePlistError: Error {
+public enum GeneratePlistError: Error {
     case workspacePathDoesNotExist
     case workspacePathIsNotAFolder
     case swiftPackageNotPresent
