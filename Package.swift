@@ -1,11 +1,14 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.3
 import PackageDescription
 
 let package = Package(
     name: "SwiftPackageAcknowledgement",
     platforms: [.macOS(.v10_15)],
     products: [
-        .executable(name: "spm-ack", targets: ["SwiftPackageAcknowledgement"])
+        .executable(name: "spm-ack", targets: [
+            "Models",
+            "SwiftPackageAcknowledgement"
+        ])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "0.0.6")),
@@ -13,11 +16,30 @@ let package = Package(
     ],
     targets: [
         .target(
+            name: "Helper",
+            dependencies: [
+                .product(name: "FoundationExtensionsStatic", package: "FoundationExtensions")
+            ]
+        ),
+        .target(
             name: "SwiftPackageAcknowledgement",
             dependencies: [
+                "Helper",
+                "Models",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "FoundationExtensionsStatic", package: "FoundationExtensions")
             ]
+        ),
+        .target(
+            name: "Models",
+            dependencies: [
+                "Helper",
+                .product(name: "FoundationExtensionsStatic", package: "FoundationExtensions")
+            ]
+        ),
+        .testTarget(
+            name: "SwiftPackageAcknowledgementTests",
+            dependencies: ["Models"]
         )
     ]
 )
