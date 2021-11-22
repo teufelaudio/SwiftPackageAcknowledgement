@@ -4,6 +4,7 @@ import ArgumentParser
 import Combine
 import Foundation
 import FoundationExtensions
+import Models
 
 struct GeneratePlist: ParsableCommand {
 

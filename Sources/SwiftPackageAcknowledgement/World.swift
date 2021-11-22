@@ -2,14 +2,8 @@
 
 import Combine
 import Foundation
-
-typealias Request = (URLRequest) -> Publishers.Promise<(data: Data, response: URLResponse), URLError>
-
-typealias Decoder<T> = (Data) -> Result<T, Error>
-typealias Encoder<T> = (T) -> Result<Data, Error>
-
-typealias PathExists = (String) -> (exists: Bool, isFolder: Bool)
-typealias FileSave = (String, Data) -> Result<Void, Error>
+import Helper
+import Models
 
 struct World {
     let urlSession: Request

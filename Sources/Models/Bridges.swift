@@ -3,11 +3,12 @@
 import Combine
 import Foundation
 import FoundationExtensions
+import Helper
 
-typealias PackageRepository = (package: ResolvedPackage, repository: GitHubRepository)
-typealias PackageLicense = (package: ResolvedPackage, license: GitHubLicense)
+public typealias PackageRepository = (package: ResolvedPackage, repository: GitHubRepository)
+public typealias PackageLicense = (package: ResolvedPackage, license: GitHubLicense)
 
-func extractPackageGitHubRepositories(from spmFile: ResolvedPackageContent) -> [PackageRepository] {
+public func extractPackageGitHubRepositories(from spmFile: ResolvedPackageContent) -> [PackageRepository] {
     spmFile.object.pins.compactMap { spmPackage in
         guard let repository = githubRepository(from: spmPackage.repositoryURL).value else {
             print("Ignoring project \(spmPackage.package) because we don't know how to fetch the license from it")
@@ -18,7 +19,7 @@ func extractPackageGitHubRepositories(from spmFile: ResolvedPackageContent) -> [
     }
 }
 
-func fetchGithubLicenses(
+public func fetchGithubLicenses(
     packageRepositories: [PackageRepository],
     githubClientID: String?,
     githubClientSecret: String?
@@ -38,7 +39,7 @@ func fetchGithubLicenses(
     }
 }
 
-func cocoaPodsModel(packageLicenses: [PackageLicense]) -> Reader<Request, Publishers.Promise<CocoaPodsPlist, GeneratePlistError>> {
+public func cocoaPodsModel(packageLicenses: [PackageLicense]) -> Reader<Request, Publishers.Promise<CocoaPodsPlist, GeneratePlistError>> {
     Reader { requester in
         Publishers.Promise.zip(
             packageLicenses.map { packageLicense in

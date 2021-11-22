@@ -2,13 +2,19 @@
 
 import Foundation
 import FoundationExtensions
+import Helper
 
-struct ResolvedPackageContent: Decodable {
+public struct ResolvedPackageContent: Decodable {
     let object: ResolvedPackageObject
     let version: Int
+    
+    public init(object: ResolvedPackageObject, version: Int) {
+        self.object = object
+        self.version = version
+    }
 }
 
-extension ResolvedPackageContent {
+public extension ResolvedPackageContent {
     func ignoring(packages ignore: [String]) -> ResolvedPackageContent {
         if ignore.count == 0 { return self }
         return ResolvedPackageContent(
@@ -22,23 +28,43 @@ extension ResolvedPackageContent {
     }
 }
 
-struct ResolvedPackageObject: Decodable {
+public struct ResolvedPackageObject: Decodable {
     let pins: [ResolvedPackage]
+
+    public init(pins: [ResolvedPackage]) {
+        self.pins = pins
+    }
 }
 
-struct ResolvedPackage: Decodable {
+public struct ResolvedPackage: Decodable {
     let package: String
     let repositoryURL: URL
     let state: ResolvedPackageState
+    
+    public init(package: String, repositoryURL: URL, state: ResolvedPackageState) {
+        self.package = package
+        self.repositoryURL = repositoryURL
+        self.state = state
+    }
 }
 
-struct ResolvedPackageState: Decodable {
+public struct ResolvedPackageState: Decodable {
     let branch: String?
     let revision: String?
     let version: String?
+
+    public init(
+        branch: String? = nil,
+        revision: String? = nil,
+        version: String? = nil
+    ) {
+        self.branch = branch
+        self.revision = revision
+        self.version = version
+    }
 }
 
-func packageResolvedFile(from workspacePath: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {
+public func packageResolvedFile(from workspacePath: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {
     Reader { pathExists in
         let (exists, isDirectory) = pathExists(workspacePath)
         guard exists else { return .failure(.workspacePathDoesNotExist) }
@@ -58,7 +84,7 @@ func packageResolvedFile(from workspacePath: String) -> Reader<PathExists, Resul
     }
 }
 
-func readSwiftPackageResolvedJson(url: URL) -> Reader<Decoder<ResolvedPackageContent>, Result<ResolvedPackageContent, GeneratePlistError>> {
+public func readSwiftPackageResolvedJson(url: URL) -> Reader<Decoder<ResolvedPackageContent>, Result<ResolvedPackageContent, GeneratePlistError>> {
     Reader { decoder in
         Result { try Data(contentsOf: url) }
             .mapError(GeneratePlistError.swiftPackageCannotBeOpen)

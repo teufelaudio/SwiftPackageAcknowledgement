@@ -2,8 +2,9 @@
 
 import Foundation
 import FoundationExtensions
+import Helper
 
-struct CocoaPodsPlist: Codable {
+public struct CocoaPodsPlist: Codable {
     let preferenceSpecifiers: [Item]
     let stringsTable = "Acknowledgements"
     let title = "Acknowledgements"
@@ -18,7 +19,7 @@ struct CocoaPodsPlist: Codable {
         ]
     }
 
-    struct Item: Codable {
+    public struct Item: Codable {
         let type: String = "PSGroupSpecifier"
         let title: String
         let license: String?
@@ -39,7 +40,7 @@ struct CocoaPodsPlist: Codable {
     }
 }
 
-func saveToPList(
+public func saveToPList(
     cocoaPods: CocoaPodsPlist,
     path: String
 ) -> Reader<(FileSave, Encoder<CocoaPodsPlist>), Result<Void, GeneratePlistError>> {

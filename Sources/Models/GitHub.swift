@@ -3,10 +3,11 @@
 import Combine
 import Foundation
 import FoundationExtensions
+import Helper
 
-typealias GitHubRepository = (owner: String, name: String)
+public typealias GitHubRepository = (owner: String, name: String)
 
-struct GitHubLicense: Decodable {
+public struct GitHubLicense: Decodable {
     let name: String
     let path: String
     let sha: String
@@ -40,17 +41,25 @@ func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistEr
     guard let host = url.host,
         host.contains(gitDomain),
         url.pathComponents.count >= 2,
-        url.pathComponents[url.pathComponents.count - 1].hasSuffix(gitSuffix) else { return .failure(.unknownRepository) }
+        let lastPathComponent = url.pathComponents.last
+    else { return .failure(.unknownRepository) }
 
+    guard let owner = url.pathComponents[safe: 1], !owner.isEmpty else {
+        return .failure(.invalidLicenseMetadataURL)
+    }
+    let name = lastPathComponent.contains(gitSuffix)
+        ? String(lastPathComponent.dropLast(gitSuffix.count))
+        : String(lastPathComponent.replacingOccurrences(of: gitSuffix, with: ""))
+    
     return .success(
         GitHubRepository(
-            owner: url.pathComponents[url.pathComponents.count - 2],
-            name: String(url.pathComponents[url.pathComponents.count - 1].dropLast(gitSuffix.count))
+            owner: owner,
+            name: name
         )
     )
 }
 
-func githubLicensingAPI(
+public func githubLicensingAPI(
     repository: GitHubRepository,
     githubClientID: String?,
     githubClientSecret: String?
@@ -86,7 +95,7 @@ func githubLicensingAPI(
     }
 }
 
-func downloadGitHubLicenseFile(url: URL) -> Reader<Request, Publishers.Promise<String, GeneratePlistError>> {
+public func downloadGitHubLicenseFile(url: URL) -> Reader<Request, Publishers.Promise<String, GeneratePlistError>> {
     Reader { requester in
         requester(URLRequest(url: url))
             .mapError(GeneratePlistError.githubAPIURLError)
