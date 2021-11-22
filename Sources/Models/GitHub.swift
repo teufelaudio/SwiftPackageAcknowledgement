@@ -40,15 +40,20 @@ func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistEr
 
     guard let host = url.host,
         host.contains(gitDomain),
-        url.pathComponents.count >= 2
+        url.pathComponents.count >= 2,
+        let lastPathComponent = url.pathComponents.last
     else { return .failure(.unknownRepository) }
 
-    let name = url.pathComponents.last!.contains(gitSuffix)
-        ? String(url.pathComponents[url.pathComponents.count - 1].dropLast(gitSuffix.count))
-        : String(url.pathComponents[url.pathComponents.count - 1].replacingOccurrences(of: gitSuffix, with: ""))
+    guard let owner = url.pathComponents[safe: 1], !owner.isEmpty else {
+        return .failure(.invalidLicenseMetadataURL)
+    }
+    let name = lastPathComponent.contains(gitSuffix)
+        ? String(lastPathComponent.dropLast(gitSuffix.count))
+        : String(lastPathComponent.replacingOccurrences(of: gitSuffix, with: ""))
+    
     return .success(
         GitHubRepository(
-            owner: url.pathComponents[1],
+            owner: owner,
             name: name
         )
     )
