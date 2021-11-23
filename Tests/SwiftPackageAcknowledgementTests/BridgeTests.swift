@@ -1,3 +1,5 @@
+// Copyright © 2021 Lautsprecher Teufel GmbH. All rights reserved.
+
 import Models
 import XCTest
 

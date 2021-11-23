@@ -8,29 +8,29 @@ import Helper
 public typealias GitHubRepository = (owner: String, name: String)
 
 public struct GitHubLicense: Decodable {
-    let name: String
-    let path: String
-    let sha: String
-    let size: Int
-    let url: URL?
-    let htmlUrl: URL?
-    let gitUrl: URL?
-    let downloadUrl: URL
-    let type: String?
-    let content: String?
-    let encoding: String?
-    let license: LicenseDetails
+    public let name: String
+    public let path: String
+    public let sha: String
+    public let size: Int
+    public let url: URL?
+    public let htmlUrl: URL?
+    public let gitUrl: URL?
+    public let downloadUrl: URL
+    public let type: String?
+    public let content: String?
+    public let encoding: String?
+    public let license: LicenseDetails
 
-    var licenseName: String {
+    public var licenseName: String {
         license.name
     }
 
-    struct LicenseDetails: Decodable {
-        let key: String
-        let name: String
-        let spdx_id: String?
-        let url: URL?
-        let node_id: String?
+    public struct LicenseDetails: Decodable {
+        public let key: String
+        public let name: String
+        public let spdxId: String?
+        public let url: URL?
+        public let nodeId: String?
     }
 }
 
@@ -70,7 +70,7 @@ public func githubLicensingAPI(
 
     var request = URLRequest(url: url)
     zip(githubClientID, githubClientSecret)
-        .flatMap { "\($0):\($0)".data(using: .utf8) }
+        .flatMap { (clientId, clientSecret) in "\(clientId):\(clientSecret)".data(using: .utf8) }
         .map { "Basic \($0.base64EncodedString())" }
         .analysis(ifSome: { request.addValue($0, forHTTPHeaderField: "Authorization") }, ifNone: { })
 
