@@ -11,6 +11,8 @@ public enum GeneratePlistError: Error {
     case invalidLicenseMetadataURL
     case unknownRepository
     case githubAPIURLError(URLError)
+    case githubLicenseNotFound
+    case githubAPIBudgetExceeded
     case githubAPIInvalidResponse(URLResponse)
     case githubLicenseJsonCannotBeDecoded(url: URL, json: String?, error: Error)
     case githubLicenseCannotBeDownloaded(URL)

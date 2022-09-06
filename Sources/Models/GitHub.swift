@@ -90,10 +90,22 @@ public func githubLicensingAPI(
         requester(request)
             .mapError(GeneratePlistError.githubAPIURLError)
             .flatMapResult { data, response -> Result<Data, GeneratePlistError> in
-                guard let httpResponse = response as? HTTPURLResponse,
-                    200..<300 ~= httpResponse.statusCode else {
-                        return .failure(.githubAPIInvalidResponse(response))
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    return .failure(.githubAPIInvalidResponse(response))
                 }
+                
+                guard httpResponse.statusCode != 404 else {
+                    return .failure(.githubLicenseNotFound)
+                }
+
+                guard httpResponse.statusCode != 403 else {
+                    return .failure(.githubAPIBudgetExceeded)
+                }
+
+                guard 200..<300 ~= httpResponse.statusCode else {
+                    return .failure(.githubAPIInvalidResponse(response))
+                }
+                
                 return .success(data)
             }
             .flatMapResult { data in
