@@ -50,8 +50,15 @@ struct GeneratePlist: ParsableCommand {
             .sinkBlockingAndExit(
                 receiveCompletion: { completion in
                     switch completion {
-                    case let .failure(error): print("An error has occurred: \(error)")
-                    case .finished:           print("Done!")
+                    case let .failure(error):
+                        print("\n💥 An error has occurred: \(error)")
+                        if case .githubAPIBudgetExceeded = error {
+                            print("Github API has a limit of 60 requests per hour when you don't use a Developer Token.")
+                            print("Please consider going to https://github.com/settings/developers, creating an OAuth App and " +
+                                  "providing Client ID and Client Secret Token in the script call.")
+                        }
+                    case .finished:
+                        print("\n✅ Done!")
                     }
                 },
                 receiveValue: { _ in }

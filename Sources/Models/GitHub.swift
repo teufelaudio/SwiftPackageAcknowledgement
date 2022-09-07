@@ -34,22 +34,32 @@ public struct GitHubLicense: Decodable {
     }
 }
 
-func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistError> {
-    let gitDomain = "github.com"
-    let gitSuffix = ".git"
-
-    guard let host = url.host,
-        host.contains(gitDomain),
-        url.pathComponents.count >= 2,
-        let lastPathComponent = url.pathComponents.last
-    else { return .failure(.unknownRepository) }
-
-    guard let owner = url.pathComponents[safe: 1], !owner.isEmpty else {
-        return .failure(.invalidLicenseMetadataURL)
+extension String {
+    func replacingOccurrences(of strings: [String], with newString: String) -> String {
+        strings.reduce(self) { partialResult, itemToReplace in
+            partialResult.replacingOccurrences(of: itemToReplace, with: newString)
+        }
     }
-    let name = lastPathComponent.contains(gitSuffix)
-        ? String(lastPathComponent.dropLast(gitSuffix.count))
-        : String(lastPathComponent.replacingOccurrences(of: gitSuffix, with: ""))
+}
+
+func githubRepository(from url: URL) -> Result<GitHubRepository, GeneratePlistError> {
+    let cleanupList = [
+        "git@github.com:",
+        "https://github.com/",
+        "https://www.github.com/",
+        "http://github.com/",
+        "http://www.github.com/",
+        ".git"
+    ]
+    
+    let parts = url.absoluteString
+        .replacingOccurrences(of: cleanupList, with: "")
+        .split(separator: "/")
+    
+    guard
+        let owner = parts[safe: 0].map(String.init),
+        let name = parts[safe: 1].map(String.init)
+    else { return .failure(.unknownRepository) }
     
     return .success(
         GitHubRepository(
@@ -80,10 +90,22 @@ public func githubLicensingAPI(
         requester(request)
             .mapError(GeneratePlistError.githubAPIURLError)
             .flatMapResult { data, response -> Result<Data, GeneratePlistError> in
-                guard let httpResponse = response as? HTTPURLResponse,
-                    200..<300 ~= httpResponse.statusCode else {
-                        return .failure(.githubAPIInvalidResponse(response))
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    return .failure(.githubAPIInvalidResponse(response))
                 }
+                
+                guard httpResponse.statusCode != 404 else {
+                    return .failure(.githubLicenseNotFound)
+                }
+
+                guard httpResponse.statusCode != 403 else {
+                    return .failure(.githubAPIBudgetExceeded)
+                }
+
+                guard 200..<300 ~= httpResponse.statusCode else {
+                    return .failure(.githubAPIInvalidResponse(response))
+                }
+                
                 return .success(data)
             }
             .flatMapResult { data in
