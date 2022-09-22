@@ -4,63 +4,40 @@ import Foundation
 import FoundationExtensions
 import Helper
 
-public struct ResolvedPackageContent: Decodable {
-    let object: ResolvedPackageObject
-    let version: Int
+public struct SpmResolvedPackageContent: Decodable {
+    public let object: SpmResolvedPackageObject
+    public let version: Int
     
-    public init(object: ResolvedPackageObject, version: Int) {
+    public init(object: SpmResolvedPackageObject, version: Int) {
         self.object = object
         self.version = version
     }
 }
 
-public extension ResolvedPackageContent {
-    func ignoring(packages ignore: [String]) -> ResolvedPackageContent {
-        if ignore.count == 0 { return self }
-        return ResolvedPackageContent(
-            object: ResolvedPackageObject(
-                pins: object.pins.filter { pin in
-                    !ignore.contains(pin.package)
-                }
-            ),
+extension SpmResolvedPackageContent: PackageFiltering {
+    public func ignoring(packages ignore: [String]) -> SpmResolvedPackageContent {
+        return SpmResolvedPackageContent(
+            object: object.ignoring(packages: ignore),
             version: version
         )
     }
 }
 
-public struct ResolvedPackageObject: Decodable {
-    let pins: [ResolvedPackage]
+public struct SpmResolvedPackageObject: Decodable {
+    public let pins: [ResolvedPackage]
 
     public init(pins: [ResolvedPackage]) {
         self.pins = pins
     }
 }
 
-public struct ResolvedPackage: Decodable {
-    let package: String
-    let repositoryURL: URL
-    let state: ResolvedPackageState
-    
-    public init(package: String, repositoryURL: URL, state: ResolvedPackageState) {
-        self.package = package
-        self.repositoryURL = repositoryURL
-        self.state = state
-    }
-}
-
-public struct ResolvedPackageState: Decodable {
-    let branch: String?
-    let revision: String?
-    let version: String?
-
-    public init(
-        branch: String? = nil,
-        revision: String? = nil,
-        version: String? = nil
-    ) {
-        self.branch = branch
-        self.revision = revision
-        self.version = version
+extension SpmResolvedPackageObject: PackageFiltering {
+    public func ignoring(packages ignore: [String]) -> SpmResolvedPackageObject {
+        SpmResolvedPackageObject(
+            pins: pins.filter { pin in
+                !ignore.contains(pin.package)
+            }
+        )
     }
 }
 
@@ -84,10 +61,10 @@ public func packageResolvedFile(from workspacePath: String) -> Reader<PathExists
     }
 }
 
-public func readSwiftPackageResolvedJson(url: URL) -> Reader<Decoder<ResolvedPackageContent>, Result<ResolvedPackageContent, GeneratePlistError>> {
+public func readSwiftPackageResolvedJson(url: URL) -> Reader<Decoder<SpmResolvedPackageContent>, Result<SpmResolvedPackageContent, GeneratePlistError>> {
     Reader { decoder in
         Result { try Data(contentsOf: url) }
-            .mapError(GeneratePlistError.swiftPackageCannotBeOpen)
+            .mapError(GeneratePlistError.packageResolvedFileCannotBeOpen)
             .flatMap { decoder($0).mapError(GeneratePlistError.swiftPackageJsonCannotBeDecoded) }
     }
 }

@@ -5,11 +5,16 @@ import Foundation
 public enum GeneratePlistError: Error {
     case workspacePathDoesNotExist
     case workspacePathIsNotAFolder
+    case carthageResolvePathDoesNotExist
+    case invalidCarthageResolvePath
     case swiftPackageNotPresent
-    case swiftPackageCannotBeOpen(Error)
+    case packageResolvedFileCannotBeOpen(Error?)
     case swiftPackageJsonCannotBeDecoded(Error)
+    case jsonPathDoesNotExist
+    case invalidJsonPath
     case invalidLicenseMetadataURL
     case unknownRepository
+    case invalidCarthagePackage(String)
     case githubAPIURLError(URLError)
     case githubLicenseNotFound
     case githubAPIBudgetExceeded
