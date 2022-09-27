@@ -46,7 +46,7 @@ func extractPackagesForCarthage(cartfileResolvedPath: String, ignore: String?) -
 func extractPackagesForJSON(path: String, ignore: String?) -> Reader<World, Result<[ResolvedPackage], GeneratePlistError>> {
     jsonResolvedFile(from: path)
         .contramapEnvironment(\World.pathExists)
-        .flatMapResult { readCarthagePackageResolved(url: $0) }
+        .flatMapResult { readJsonPackage(url: $0) }
         .mapResult { $0.ignoring(packages: (ignore ?? "").components(separatedBy: ",")).packages }
 }
 

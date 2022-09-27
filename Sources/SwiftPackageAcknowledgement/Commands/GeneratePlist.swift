@@ -11,9 +11,9 @@ struct GeneratePlist: ParsableCommand {
     @Argument(help: "Path to your workspace, e.g. ~/code/MyProject/MyProject.xcworkspace")
     var workspacePath: String
     @Option(help: "Path to your Cartfile.resolved, e.g. ~/code/MyProject/Cartfile.resolved")
-    var cartfileResolvedPath: String?
+    var cartfileResolvedPath: String? // --cartfile-resolved-path=Cartfile.resolved
     @Option(help: "Path to a custom JSON file with dependencies, e.g. ~/code/MyProject/MyPackages.json")
-    var manualJsonPath: String?
+    var manualJsonPath: String?  // --manual-json-path=AdditionalPackages.json -> {"packages":[{"package":"","repositoryURL":"","state":{"version": "1.2.3"}}]}
     @Argument(help: "Path to the file to be created or replaced")
     var outputFile: String
     @Argument(help: "If providing client ID and client secret, the GitHub API call will have extended limits.")
