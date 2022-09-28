@@ -10,6 +10,10 @@ struct GeneratePlist: ParsableCommand {
 
     @Argument(help: "Path to your workspace, e.g. ~/code/MyProject/MyProject.xcworkspace")
     var workspacePath: String
+    @Option(help: "Path to your Cartfile.resolved, e.g. ~/code/MyProject/Cartfile.resolved")
+    var cartfileResolvedPath: String? // --cartfile-resolved-path=Cartfile.resolved
+    @Option(help: "Path to a custom JSON file with dependencies, e.g. ~/code/MyProject/MyPackages.json")
+    var manualJsonPath: String?  // --manual-json-path=AdditionalPackages.json -> {"packages":[{"package":"","repositoryURL":"","state":{"version": "1.2.3"}}]}
     @Argument(help: "Path to the file to be created or replaced")
     var outputFile: String
     @Argument(help: "If providing client ID and client secret, the GitHub API call will have extended limits.")
@@ -24,45 +28,22 @@ struct GeneratePlist: ParsableCommand {
     func run() throws {
         var cancellables = Set<AnyCancellable>()
 
-        packageResolvedFile(from: workspacePath)
-            .contramapEnvironment(\World.pathExists)
-            .flatMapResult { readSwiftPackageResolvedJson(url: $0).contramapEnvironment(\World.spmJsonDecoder) }
-            .mapResult { $0.ignoring(packages: (ignore ?? "").components(separatedBy: ",")) }
-            .mapResult(extractPackageGitHubRepositories)
-            .mapValue(\.promise)
-            .flatMapPublisher { packageRepositories in
-                fetchGithubLicenses(
-                    packageRepositories: packageRepositories,
-                    githubClientID: self.gitClientID,
-                    githubClientSecret: self.gitSecret
-                ).contramapEnvironment(\World.urlSession, \World.githubJsonDecoder)
+        extractPackagesForSPM(workspacePath: workspacePath, ignore: ignore)
+            .flatMapResult { accumulatedPackages -> Reader<World, Result<[ResolvedPackage], GeneratePlistError>> in
+                guard let cartfileResolvedPath = cartfileResolvedPath else { return Reader.pure(.success(accumulatedPackages)) }
+
+                return extractPackagesForCarthage(cartfileResolvedPath: cartfileResolvedPath, ignore: ignore)
+                    .mapResult { $0 + accumulatedPackages }
             }
-            .flatMapPublisher { (packageLicenses: [PackageLicense]) in
-                cocoaPodsModel(packageLicenses: packageLicenses)
-                    .contramapEnvironment(\World.urlSession)
+            .flatMapResult { accumulatedPackages -> Reader<World, Result<[ResolvedPackage], GeneratePlistError>> in
+                guard let manualJsonPath = manualJsonPath else { return Reader.pure(.success(accumulatedPackages)) }
+
+                return extractPackagesForJSON(path: manualJsonPath, ignore: ignore)
+                    .mapResult { $0 + accumulatedPackages }
             }
-            .flatMapPublisher { cocoaPods in
-                saveToPList(cocoaPods: cocoaPods, path: self.outputFile)
-                    .mapValue(\.promise)
-                    .contramapEnvironment(\World.fileSave, \World.cocoaPodsEncoder)
-            }
+            .flatMap { writePlist(for: $0, gitClientID: gitClientID, gitSecret: gitSecret, outputPath: outputFile) }
             .inject(world)
-            .sinkBlockingAndExit(
-                receiveCompletion: { completion in
-                    switch completion {
-                    case let .failure(error):
-                        print("\n💥 An error has occurred: \(error)")
-                        if case .githubAPIBudgetExceeded = error {
-                            print("Github API has a limit of 60 requests per hour when you don't use a Developer Token.")
-                            print("Please consider going to https://github.com/settings/developers, creating an OAuth App and " +
-                                  "providing Client ID and Client Secret Token in the script call.")
-                        }
-                    case .finished:
-                        print("\n✅ Done!")
-                    }
-                },
-                receiveValue: { _ in }
-            )
-            .store(in: &cancellables)
+            .executeAndWait(storeIn: &cancellables)
     }
+    
 }

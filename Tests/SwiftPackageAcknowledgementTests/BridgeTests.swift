@@ -1,6 +1,6 @@
 // Copyright © 2021 Lautsprecher Teufel GmbH. All rights reserved.
 
-import Models
+@testable import Models
 import XCTest
 
 class BridgeTests: XCTestCase {
@@ -33,13 +33,13 @@ class BridgeTests: XCTestCase {
                 state: .init()
             )
         ]
-        let content = ResolvedPackageContent(
-            object: ResolvedPackageObject(pins: pins),
+        let content = SpmResolvedPackageContent(
+            object: SpmResolvedPackageObject(pins: pins),
             version: 1
         )
         
         // act
-        let packageRepositories = extractPackageGitHubRepositories(from: content)
+        let packageRepositories = extractPackageGitHubRepositories(from: content.object.pins)
         
         // assert
         let repositories = packageRepositories.map(\.repository)

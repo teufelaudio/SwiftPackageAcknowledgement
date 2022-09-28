@@ -8,8 +8,8 @@ import Helper
 public typealias PackageRepository = (package: ResolvedPackage, repository: GitHubRepository)
 public typealias PackageLicense = (package: ResolvedPackage, license: GitHubLicense)
 
-public func extractPackageGitHubRepositories(from spmFile: ResolvedPackageContent) -> [PackageRepository] {
-    spmFile.object.pins.compactMap { spmPackage in
+public func extractPackageGitHubRepositories(from packages: [ResolvedPackage]) -> [PackageRepository] {
+    packages.compactMap { spmPackage in
         guard let repository = githubRepository(from: spmPackage.repositoryURL).value else {
             print("⚠️ Ignoring project \(spmPackage.package) because we don't know how to fetch the license from it")
             return nil

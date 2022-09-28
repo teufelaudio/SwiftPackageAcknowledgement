@@ -8,7 +8,7 @@ import Models
 struct World {
     let urlSession: Request
 
-    let spmJsonDecoder: Decoder<ResolvedPackageContent>
+    let spmJsonDecoder: Decoder<SpmResolvedPackageContent>
     let githubJsonDecoder: Decoder<GitHubLicense>
     let cocoaPodsEncoder: Encoder<CocoaPodsPlist>
 
@@ -21,7 +21,7 @@ extension World {
         urlSession: { URLSession.shared.dataTaskPublisher(for: $0).promise },
 
         spmJsonDecoder: { data in
-            Result { try JSONDecoder().decode(ResolvedPackageContent.self, from: data) }
+            Result { try JSONDecoder().decode(SpmResolvedPackageContent.self, from: data) }
         },
         githubJsonDecoder: { data in
             Result {
