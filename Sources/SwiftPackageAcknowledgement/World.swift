@@ -9,6 +9,7 @@ struct World {
     let urlSession: Request
 
     let spmJsonDecoder: Decoder<SpmResolvedPackageContent>
+    let manualJsonDecoder: Decoder<JsonResolvedPackageContent>
     let githubJsonDecoder: Decoder<GitHubLicense>
     let cocoaPodsEncoder: Encoder<CocoaPodsPlist>
 
@@ -22,6 +23,9 @@ extension World {
 
         spmJsonDecoder: { data in
             Result { try JSONDecoder().decode(SpmResolvedPackageContent.self, from: data) }
+        },
+        manualJsonDecoder: { data in
+            Result { try JSONDecoder().decode(JsonResolvedPackageContent.self, from: data) }
         },
         githubJsonDecoder: { data in
             Result {
