@@ -12,13 +12,13 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.2"),
-        .package(url: "https://github.com/teufelaudio/FoundationExtensions", from: "0.1.6")
+        .package(url: "https://github.com/teufelaudio/FoundationExtensions", from: "0.5.1")
     ],
     targets: [
         .target(
             name: "Helper",
             dependencies: [
-                .product(name: "FoundationExtensionsStatic", package: "FoundationExtensions")
+                .product(name: "FoundationExtensions", package: "FoundationExtensions")
             ]
         ),
         .target(
@@ -27,14 +27,14 @@ let package = Package(
                 "Helper",
                 "Models",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "FoundationExtensionsStatic", package: "FoundationExtensions")
+                .product(name: "FoundationExtensions", package: "FoundationExtensions")
             ]
         ),
         .target(
             name: "Models",
             dependencies: [
                 "Helper",
-                .product(name: "FoundationExtensionsStatic", package: "FoundationExtensions")
+                .product(name: "FoundationExtensions", package: "FoundationExtensions")
             ]
         ),
         .testTarget(
