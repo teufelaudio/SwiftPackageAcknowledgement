@@ -30,18 +30,18 @@ struct GeneratePlist: ParsableCommand {
             .mapResult { $0.ignoring(packages: (ignore ?? "").components(separatedBy: ",")) }
             .mapResult(extractPackageGitHubRepositories)
             .mapValue(\.promise)
-            .flatMapPublisher { packageRepositories in
+            .flatMapLatestPublisher { packageRepositories in
                 fetchGithubLicenses(
                     packageRepositories: packageRepositories,
                     githubClientID: self.gitClientID,
                     githubClientSecret: self.gitSecret
                 ).contramapEnvironment(\World.urlSession, \World.githubJsonDecoder)
             }
-            .flatMapPublisher { (packageLicenses: [PackageLicense]) in
+            .flatMapLatestPublisher { (packageLicenses: [PackageLicense]) in
                 cocoaPodsModel(packageLicenses: packageLicenses)
                     .contramapEnvironment(\World.urlSession)
             }
-            .flatMapPublisher { cocoaPods in
+            .flatMapLatestPublisher { cocoaPods in
                 saveToPList(cocoaPods: cocoaPods, path: self.outputFile)
                     .mapValue(\.promise)
                     .contramapEnvironment(\World.fileSave, \World.cocoaPodsEncoder)
