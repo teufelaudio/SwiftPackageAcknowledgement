@@ -14,6 +14,8 @@ public struct ResolvedPackageContent: Decodable {
     }
 }
 
+extension ResolvedPackageContent: Equatable {}
+
 // MARK: ResolvedPackageContent Decoding
 
 extension ResolvedPackageContent {
@@ -60,6 +62,8 @@ public struct ResolvedPackageObject: Decodable {
     }
 }
 
+extension ResolvedPackageObject: Equatable {}
+
 // MARK: XCWorkspace ResolvedPackage
 
 public struct ResolvedPackage: Decodable {
@@ -73,6 +77,8 @@ public struct ResolvedPackage: Decodable {
         self.state = state
     }
 }
+
+extension ResolvedPackage: Equatable {}
 
 // MARK: Swift Package ResolvedPackage
 
@@ -97,6 +103,8 @@ public struct ResolvedPackageState: Decodable {
         self.version = version
     }
 }
+
+extension ResolvedPackageState: Equatable {}
 
 public func packageResolvedFile(from path: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {
     Reader { pathExists in
