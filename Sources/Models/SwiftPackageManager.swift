@@ -98,23 +98,35 @@ public struct ResolvedPackageState: Decodable {
     }
 }
 
-public func packageResolvedFile(from workspacePath: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {
+public func packageResolvedFile(from path: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {
     Reader { pathExists in
-        let (exists, isDirectory) = pathExists(workspacePath)
+        let (exists, isDirectory) = pathExists(path)
         guard exists else { return .failure(.workspacePathDoesNotExist) }
         guard isDirectory else { return .failure(.workspacePathIsNotAFolder) }
 
-        let workspaceURL = URL(fileURLWithPath: workspacePath, isDirectory: true)
-        let packageResolved = workspaceURL
+        // checks for a package resolved file within a workspace
+        
+        let workspaceURL = URL(fileURLWithPath: path, isDirectory: true)
+        let workspacePackageResolved = workspaceURL
             .appendingPathComponent("xcshareddata", isDirectory: true)
             .appendingPathComponent("swiftpm", isDirectory: true)
             .appendingPathComponent("Package.resolved", isDirectory: false)
 
-        guard pathExists(packageResolved.path) == (exists: true, isDirectory: false) else {
-            return .failure(.swiftPackageNotPresent)
+        if pathExists(workspacePackageResolved.path) == (exists: true, isDirectory: false) {
+            return .success(workspacePackageResolved)
+        }
+        
+        // checks for a package resolved file of a SwiftPackage
+        
+        let swiftPackageURL = URL(fileURLWithPath: path, isDirectory: true)
+        let swiftPackageResolved = swiftPackageURL
+            .appendingPathComponent("Package.resolved", isDirectory: false)
+        
+        if pathExists(swiftPackageResolved.path) == (exists: true, isDirectory: false) {
+            return .success(swiftPackageResolved)
         }
 
-        return .success(packageResolved)
+        return .failure(.swiftPackageNotPresent)
     }
 }
 
