@@ -8,8 +8,8 @@ import Models
 
 struct GeneratePlist: ParsableCommand {
 
-    @Argument(help: "Path to your workspace, e.g. ~/code/MyProject/MyProject.xcworkspace")
-    var workspacePath: String
+    @Argument(help: "Path to your workspace or SwiftPackage, e.g. ~/code/MyProject/MyProject.xcworkspace")
+    var directoryPath: String
     @Argument(help: "Path to the file to be created or replaced")
     var outputFile: String
     @Argument(help: "If providing client ID and client secret, the GitHub API call will have extended limits.")
@@ -24,7 +24,7 @@ struct GeneratePlist: ParsableCommand {
     func run() throws {
         var cancellables = Set<AnyCancellable>()
 
-        packageResolvedFile(from: workspacePath)
+        packageResolvedFile(from: directoryPath)
             .contramapEnvironment(\World.pathExists)
             .flatMapResult { readSwiftPackageResolvedJson(url: $0).contramapEnvironment(\World.spmJsonDecoder) }
             .mapResult { $0.ignoring(packages: (ignore ?? "").components(separatedBy: ",")) }
