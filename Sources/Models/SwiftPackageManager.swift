@@ -14,6 +14,30 @@ public struct ResolvedPackageContent: Decodable {
     }
 }
 
+// MARK: ResolvedPackageContent Decoding
+
+extension ResolvedPackageContent {
+    private enum CodingKeys: String, CodingKey {
+        case object, version, pins
+    }
+    
+    public init(from decoder: Swift.Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if container.contains(.object) {
+            // we assume this is a resolved file from a xcworkspace
+            object = try container.decode(ResolvedPackageObject.self, forKey: .object)
+            version = try container.decode(Int.self, forKey: .version)
+        } else {
+            // we assume this is a resolved file from a package itself
+            let pins = try container.decode([SwiftPackageResolvedPackage].self, forKey: .pins)
+            object = ResolvedPackageObject(pins: pins.map {
+                ResolvedPackage(package: $0.identity, repositoryURL: $0.location, state: $0.state)
+            })
+            version = try container.decode(Int.self, forKey: .version)
+        }
+    }
+}
+
 public extension ResolvedPackageContent {
     func ignoring(packages ignore: [String]) -> ResolvedPackageContent {
         if ignore.count == 0 { return self }
@@ -36,6 +60,8 @@ public struct ResolvedPackageObject: Decodable {
     }
 }
 
+// MARK: XCWorkspace ResolvedPackage
+
 public struct ResolvedPackage: Decodable {
     let package: String
     let repositoryURL: URL
@@ -46,6 +72,14 @@ public struct ResolvedPackage: Decodable {
         self.repositoryURL = repositoryURL
         self.state = state
     }
+}
+
+// MARK: Swift Package ResolvedPackage
+
+public struct SwiftPackageResolvedPackage: Decodable {
+    let identity: String
+    let location: URL
+    let state: ResolvedPackageState
 }
 
 public struct ResolvedPackageState: Decodable {
