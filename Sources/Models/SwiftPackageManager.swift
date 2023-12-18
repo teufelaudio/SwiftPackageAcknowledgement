@@ -14,6 +14,32 @@ public struct ResolvedPackageContent: Decodable {
     }
 }
 
+extension ResolvedPackageContent: Equatable {}
+
+// MARK: ResolvedPackageContent Decoding
+
+extension ResolvedPackageContent {
+    private enum CodingKeys: String, CodingKey {
+        case object, version, pins
+    }
+    
+    public init(from decoder: Swift.Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if container.contains(.object) {
+            // we assume this is a resolved file from a xcworkspace
+            object = try container.decode(ResolvedPackageObject.self, forKey: .object)
+            version = try container.decode(Int.self, forKey: .version)
+        } else {
+            // we assume this is a resolved file from a package itself
+            let pins = try container.decode([SwiftPackageResolvedPackage].self, forKey: .pins)
+            object = ResolvedPackageObject(pins: pins.map {
+                ResolvedPackage(package: $0.identity, repositoryURL: $0.location, state: $0.state)
+            })
+            version = try container.decode(Int.self, forKey: .version)
+        }
+    }
+}
+
 public extension ResolvedPackageContent {
     func ignoring(packages ignore: [String]) -> ResolvedPackageContent {
         if ignore.count == 0 { return self }
@@ -36,6 +62,10 @@ public struct ResolvedPackageObject: Decodable {
     }
 }
 
+extension ResolvedPackageObject: Equatable {}
+
+// MARK: XCWorkspace ResolvedPackage
+
 public struct ResolvedPackage: Decodable {
     let package: String
     let repositoryURL: URL
@@ -46,6 +76,16 @@ public struct ResolvedPackage: Decodable {
         self.repositoryURL = repositoryURL
         self.state = state
     }
+}
+
+extension ResolvedPackage: Equatable {}
+
+// MARK: Swift Package ResolvedPackage
+
+public struct SwiftPackageResolvedPackage: Decodable {
+    let identity: String
+    let location: URL
+    let state: ResolvedPackageState
 }
 
 public struct ResolvedPackageState: Decodable {
@@ -64,23 +104,37 @@ public struct ResolvedPackageState: Decodable {
     }
 }
 
-public func packageResolvedFile(from workspacePath: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {
+extension ResolvedPackageState: Equatable {}
+
+public func packageResolvedFile(from path: String) -> Reader<PathExists, Result<URL, GeneratePlistError>> {
     Reader { pathExists in
-        let (exists, isDirectory) = pathExists(workspacePath)
+        let (exists, isDirectory) = pathExists(path)
         guard exists else { return .failure(.workspacePathDoesNotExist) }
         guard isDirectory else { return .failure(.workspacePathIsNotAFolder) }
 
-        let workspaceURL = URL(fileURLWithPath: workspacePath, isDirectory: true)
-        let packageResolved = workspaceURL
+        // checks for a package resolved file within a workspace
+        
+        let workspaceURL = URL(fileURLWithPath: path, isDirectory: true)
+        let workspacePackageResolved = workspaceURL
             .appendingPathComponent("xcshareddata", isDirectory: true)
             .appendingPathComponent("swiftpm", isDirectory: true)
             .appendingPathComponent("Package.resolved", isDirectory: false)
 
-        guard pathExists(packageResolved.path) == (exists: true, isDirectory: false) else {
-            return .failure(.swiftPackageNotPresent)
+        if pathExists(workspacePackageResolved.path) == (exists: true, isDirectory: false) {
+            return .success(workspacePackageResolved)
+        }
+        
+        // checks for a package resolved file of a SwiftPackage
+        
+        let swiftPackageURL = URL(fileURLWithPath: path, isDirectory: true)
+        let swiftPackageResolved = swiftPackageURL
+            .appendingPathComponent("Package.resolved", isDirectory: false)
+        
+        if pathExists(swiftPackageResolved.path) == (exists: true, isDirectory: false) {
+            return .success(swiftPackageResolved)
         }
 
-        return .success(packageResolved)
+        return .failure(.swiftPackageNotPresent)
     }
 }
 

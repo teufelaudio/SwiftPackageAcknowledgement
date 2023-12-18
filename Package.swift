@@ -39,7 +39,11 @@ let package = Package(
         ),
         .testTarget(
             name: "SwiftPackageAcknowledgementTests",
-            dependencies: ["Models"]
+            dependencies: ["Models"],
+            resources: [
+                .copy("Resources/SwiftPackagePackageResolved.json"),
+                .copy("Resources/XCWorkspacePackageResolved.json"),
+            ]
         )
     ]
 )
