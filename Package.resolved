@@ -1,25 +1,23 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "FoundationExtensions",
-        "repositoryURL": "https://github.com/teufelaudio/FoundationExtensions",
-        "state": {
-          "branch": null,
-          "revision": "6b9bd39109a1634112c325aa2e4a6a63d58a6254",
-          "version": "0.5.1"
-        }
-      },
-      {
-        "package": "swift-argument-parser",
-        "repositoryURL": "https://github.com/apple/swift-argument-parser",
-        "state": {
-          "branch": null,
-          "revision": "e1465042f195f374b94f915ba8ca49de24300a0d",
-          "version": "1.0.2"
-        }
+  "pins" : [
+    {
+      "identity" : "foundationextensions",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/teufelaudio/FoundationExtensions",
+      "state" : {
+        "revision" : "c441f8fa10ee6c93ce4d4d3939a8bd683987e48f",
+        "version" : "0.6.2"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "c8ed701b513cf5177118a175d85fbbbcd707ab41",
+        "version" : "1.3.0"
+      }
+    }
+  ],
+  "version" : 2
 }
